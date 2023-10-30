@@ -1,0 +1,140 @@
+--Link to BigQuery. Queries progress in difficulty
+https://console.cloud.google.com/bigquery?sq=849271491029:abfd568b75014f71ad69f26b8d70c1e0 
+
+
+--Look at data available in table
+
+SELECT 
+*
+FROM `inbound-bee-402201.Covid_Project.CovidVaccinations` 
+
+ORDER BY 
+  3,4
+LIMIT 1000
+
+
+
+--Select data that we are going to be using
+
+SELECT
+location, date, total_cases, new_cases, total_deaths, population
+FROM
+inbound-bee-402201.Covid_Project.CovidDeaths
+ORDER BY
+1,2
+
+
+
+--Looking at Total Cases vs Total Deaths
+--Shows likelihood of dying if you contract Covid in the United States
+
+SELECT
+location, date, total_cases, total_deaths, ((total_deaths/total_cases)*100) AS Death_Percentage
+FROM
+inbound-bee-402201.Covid_Project.CovidDeaths
+WHERE
+location = 'United States'
+ORDER BY
+1,2
+
+
+--Looking at total cases vs population
+--shows what percentage of population got Covid
+
+SELECT
+location, date, population, total_cases, ((total_cases/population)*100) AS Infection_Percentage
+FROM
+inbound-bee-402201.Covid_Project.CovidDeaths
+WHERE
+location = 'United States'
+ORDER BY
+1,2
+
+
+--Looking at Countries with Highest Infection Rate compared to Population
+
+SELECT
+location, population, MAX(total_cases) AS Highest_Infection_Count, MAX((total_cases/population)*100) AS highest_Infection_Percentage
+FROM
+inbound-bee-402201.Covid_Project.CovidDeaths
+GROUP BY 
+location, population
+ORDER BY
+highest_infection_percentage DESC
+
+
+--Showing with the highest death count per population
+
+SELECT location, MAX(total_deaths) AS Total_Death_Count
+FROM inbound-bee-402201.Covid_Project.CovidDeaths
+WHERE continent is not null
+GROUP BY location
+ORDER BY Total_Death_Count DESC
+
+
+--LET'S BREAK THINGS DOWN BY CONTINENT
+
+--Showing the continents with the highest death count per population
+
+
+SELECT continent, MAX(total_deaths) AS Total_Death_Count
+FROM inbound-bee-402201.Covid_Project.CovidDeaths
+WHERE continent is not null
+GROUP BY continent 
+ORDER BY Total_Death_Count DESC
+
+
+--Global numbers
+
+SELECT
+SUM(new_cases) AS Total_Cases, SUM(new_deaths) AS Total_Deaths, (SUM(new_deaths)/SUM(new_cases))*100 AS Death_Percentage
+FROM
+inbound-bee-402201.Covid_Project.CovidDeaths
+WHERE continent is not null
+ORDER BY
+1,2
+
+
+
+--Look at Covid Vaccinations information
+
+SELECT *
+FROM inbound-bee-402201.Covid_Project.CovidVaccinations
+
+
+--Join Covid Deaths & Covid Vaccinations on Location & Date
+
+SELECT *
+FROM inbound-bee-402201.Covid_Project.CovidDeaths deaths
+JOIN inbound-bee-402201.Covid_Project.CovidVaccinations vaccs
+  ON deaths.location = vaccs.location
+  and deaths.date = vaccs.date
+
+
+--Look at Total Population vs Vaccination
+
+SELECT dea.continent, dea.location, dea.date, dea.population, vac.new_vaccinations, SUM(vac.new_vaccinations) OVER (PARTITION BY dea.location ORDER BY dea.location, dea.date) AS Rolling_Total_Vaccinations
+FROM inbound-bee-402201.Covid_Project.CovidDeaths dea
+JOIN inbound-bee-402201.Covid_Project.CovidVaccinations vac
+  ON dea.location = vac.location
+  and dea.date = vac.date
+WHERE dea.continent is not null
+ORDER BY 2,3
+
+
+--Looking for Percent of population that is vaccinated
+
+WITH PopvsVac
+AS
+(
+SELECT dea.continent, dea.location, dea.date, dea.population, vac.new_vaccinations, SUM(vac.new_vaccinations) OVER (PARTITION BY dea.location ORDER BY dea.location, dea.date) AS Rolling_Total_Vaccinations
+FROM inbound-bee-402201.Covid_Project.CovidDeaths dea
+JOIN inbound-bee-402201.Covid_Project.CovidVaccinations vac
+  ON dea.location = vac.location
+  and dea.date = vac.date
+WHERE dea.continent is not null
+)
+SELECT *, (Rolling_Total_Vaccinations/population)*100
+FROM PopvsVac
+
+
