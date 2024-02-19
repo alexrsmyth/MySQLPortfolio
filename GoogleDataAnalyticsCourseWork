@@ -13,6 +13,7 @@ ORDER BY
 LIMIT 10
 
 
+
 --Work on using Aliases to make queries more readable--
 SELECT `bigquery-public-data.world_bank_intl_education.international_education`.country_name,
     `bigquery-public-data.world_bank_intl_education.country_summary`.country_code,
@@ -45,7 +46,6 @@ ON edu.country_code = summary.country_code
 
 
 
-
 --Answer question: In 2015, how many people were of the official age for secondary age broken down by region of the world?--
 SELECT
 summary.region,
@@ -60,6 +60,7 @@ ON edu.country_code = summary.country_code --country_code is our key
     AND edu.year = 2015
 GROUP BY summary.region
 ORDER BY secondary_edu_population DESC
+
 
 
 --Answer question: Which Division 1 mascots were the winningest in NCAA Basketball in the 1990s?--
@@ -77,3 +78,53 @@ WHERE seasons.season BETWEEN 1990 AND 1999
  AND seasons.division = 1
  GROUP BY 1,2,3
 ORDER BY avg_wins DESC, university
+
+
+
+--Report on distribution of orders by state--
+SELECT 
+  orders.*,
+  warehouse.warehouse_alias,
+  warehouse.state
+FROM
+  `t-gateway-378303.warehouse_orders.orders` AS orders
+JOIN
+  `t-gateway-378303.warehouse_orders.warehouse` as warehouse
+ON orders.warehouse_id = warehouse.warehouse_id
+
+
+
+--Count the number of states included in the ordered data--
+SELECT 
+  COUNT(warehouse.state) as num_states
+FROM
+  `t-gateway-378303.warehouse_orders.orders` AS orders
+JOIN
+  `t-gateway-378303.warehouse_orders.warehouse` as warehouse
+ON orders.warehouse_id = warehouse.warehouse_id
+
+
+
+--Count the number of states included in the ordered data, remove duplicates and null values--
+SELECT 
+  COUNT(DISTINCT warehouse.state) as num_states
+FROM
+  `t-gateway-378303.warehouse_orders.orders` AS orders
+JOIN
+  `t-gateway-378303.warehouse_orders.warehouse` as warehouse
+ON orders.warehouse_id = warehouse.warehouse_id
+
+
+
+--Group number of distinct orders per state--
+SELECT 
+  state,
+  COUNT(DISTINCT order_id) as num_orders
+FROM
+  `t-gateway-378303.warehouse_orders.orders` AS orders
+JOIN
+  `t-gateway-378303.warehouse_orders.warehouse` as warehouse
+ON orders.warehouse_id = warehouse.warehouse_id
+GROUP BY 
+  warehouse.state
+
