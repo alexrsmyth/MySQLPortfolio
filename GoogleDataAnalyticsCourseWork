@@ -14,6 +14,7 @@ LIMIT 10
 
 
 
+--Practicing different JOINs--
 --Work on using Aliases to make queries more readable--
 SELECT `bigquery-public-data.world_bank_intl_education.international_education`.country_name,
     `bigquery-public-data.world_bank_intl_education.country_summary`.country_code,
@@ -128,3 +129,58 @@ ON orders.warehouse_id = warehouse.warehouse_id
 GROUP BY 
   warehouse.state
 
+
+
+--Practice Subqueries--
+--compare the number of bikes available at a particular station to the overall average number of bikes available at all stations. Example subquery from the SELECT statement--
+SELECT
+  station_id,
+  num_bikes_available,
+  (SELECT
+    AVG(num_bikes_available)
+  FROM `bigquery-public-data.new_york.citibike_stations`) as avg_num_bikes_available
+FROM `bigquery-public-data.new_york.citibike_stations`;
+
+
+
+--Subquery from the FROM statement. Calculate the total number of rides that started at each station.--
+SELECT 
+	station_id,
+	name,
+	number_of_rides AS number_of_rides_starting_at_station
+FROM
+	(
+		SELECT
+			CAST(start_station_id AS STRING) AS start_station_id_str, #**
+			COUNT(*) AS number_of_rides
+		FROM 
+      		bigquery-public-data.new_york.citibike_trips
+		GROUP BY 
+			CAST(start_station_id AS STRING) #**
+	)
+	AS station_num_trips
+	INNER JOIN 
+		bigquery-public-data.new_york.citibike_stations 
+	ON 
+		station_id = start_station_id_str #**
+	ORDER BY 
+		number_of_rides DESC;
+
+
+
+--Subqueries from the WHERE statement. What stations were used only by subscribers?--
+SELECT
+	station_id,
+	name
+FROM
+	bigquery-public-data.new_york.citibike_stations
+WHERE
+	station_id IN
+	(
+		SELECT
+			CAST(start_station_id AS STRING) AS start_station_id_str #**
+		FROM
+	    	bigquery-public-data.new_york.citibike_trips
+	  	WHERE
+			usertype = 'Subscriber'
+  	);
