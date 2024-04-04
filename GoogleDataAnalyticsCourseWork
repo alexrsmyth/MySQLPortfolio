@@ -211,3 +211,36 @@ GROUP BY
   warehouse_name
 HAVING
   COUNT(Orders.order_id) > 0
+
+
+-- Work on calculations within a SQL Query. Switched to leading commas to help with readability and error prevention--
+--Calculation is to confirm Total_Bags column is actually the total quantity from the small, large and XL columns--
+
+SELECT 
+    Date
+  , region
+  , Small_Bags
+  , Large_Bags
+  , XLarge_Bags
+  , Total_Bags
+  , Small_Bags + Large_Bags + XLarge_Bags AS Total_Bags_Calc
+
+FROM 
+  `t-gateway-378303.avocado_data.avocado_prices`
+
+
+
+--Calculation is to find the percentage of total bags sold that were small bags--
+
+SELECT 
+    Date
+  , region
+  , Total_Bags
+  , Small_Bags
+  , (Small_Bags / Total_Bags) * 100 AS Small_Bags_Percent
+
+FROM 
+  `t-gateway-378303.avocado_data.avocado_prices`
+
+WHERE
+  Total_Bags <> 0
