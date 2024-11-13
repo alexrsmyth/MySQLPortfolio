@@ -1,2 +1,2 @@
-# MySQLPortfolio
-A collection of my SQL work as I further develop my SQL skills.
+# MyDataAnalystPortfolio
+A collection of my SQL and R Programming work as I further develop my data analyst skills.
